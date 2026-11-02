@@ -72,3 +72,23 @@ HanWri/
 - **2026-11-02 (Task 2)**: Hoàn thành thiết lập tầng Database & Data Models với Dexie IndexedDB (`HanWriDatabase`). Định nghĩa interfaces (`Deck`, `Word`, `RecognitionCandidate`, `HandwritingRecognitionResult`, `PracticeStats`). Cài đặt `fake-indexeddb`, viết unit test theo TDD kiểm thử hàm khởi tạo seed dữ liệu HSK 1 và các hàm CRUD (`createDeck`, `addWordToDeck`, `getDeckWithWords`, `deleteWord`). 100% test pass và TypeScript strict mode xác thực thành công (0 errors).
 - **2026-11-02 (Task 1)**: Hoàn thành thiết lập nền tảng dự án (Vite 8, React 19, TypeScript, TailwindCSS v3, Vitest 5). Thiết lập alias `@/`, cấu hình màu sắc cổ phong `chinese.*`, viết unit test theo TDD cho `App.tsx`, build và test thành công 100%.
 - **2026-11-02 (Khởi tạo)**: Khởi tạo tài liệu `PROJECT_STATE.md`, phân tích yêu cầu kỹ thuật và xây dựng lộ trình các giai đoạn phát triển.
+
+
+---
+
+## 4. Hướng dẫn tiếp tục phiên làm việc tiếp theo (Resume Instructions for Next Session)
+
+- **Vị trí hiện tại**: Đã hoàn thành nghiệm thu **Task 1, Task 2, Task 3, Task 4**.
+- **Task tiếp theo**: **Task 5: Guided Stroke Tracing Quiz Mode** (Chế độ đồ chữ theo mẫu bắt lỗi sai và gợi ý nét).
+- **Kế hoạch chi tiết**: Tham khảo [docs/superpowers/plans/2026-11-02-hanwri-chinese-handwriting-app.md](file:///d:/HanWri/docs/superpowers/plans/2026-11-02-hanwri-chinese-handwriting-app.md#L368).
+- **Lệnh kiểm tra hiện trạng**:
+  ```bash
+  # Chạy toàn bộ 22 unit tests:
+  npx vitest run
+
+  # Kiểm tra TypeScript strict mode:
+  npx tsc -b
+
+  # Khởi chạy server phát triển local:
+  npm run dev
+  ```
