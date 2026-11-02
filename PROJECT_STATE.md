@@ -1,6 +1,6 @@
 # PROJECT_STATE: HanWri (Chinese Handwriting & Character Practice App)
 
-> **Trạng thái hiện tại**: Giai đoạn 1 - Tầng dữ liệu & mô hình hoàn tất (Task 2: Database Layer & Data Models (Dexie IndexedDB))  
+> **Trạng thái hiện tại**: Giai đoạn 2 - Thành phần giao diện & Canvas (Task 3: Practice Grid Component (MiZiGe & TianZiGe))  
 > **Cập nhật lần cuối**: 2026-11-02  
 > **Mục tiêu dự án**: Xây dựng ứng dụng web/desktop hỗ trợ học và luyện viết chữ Hán dựa trên thư viện `hanzi-writer`, tích hợp quản lý bộ từ, hoạt ảnh nét viết, 2 chế độ luyện viết (đồ nét theo thứ tự & nhận diện viết tự do), cùng khả năng nhập từ vựng qua CSV/Excel.
 
@@ -16,6 +16,10 @@ HanWri/
 │   ├── favicon.svg
 │   └── icons.svg
 ├── src/
+│   ├── components/
+│   │   └── grid/
+│   │       ├── CharacterGrid.test.tsx  # Unit tests kiểm thử khung ô chữ Mễ/Điền
+│   │       └── CharacterGrid.tsx       # Component SVG render ô chữ MiZiGe, TianZiGe, None
 │   ├── db/
 │   │   ├── db.test.ts              # Unit tests cho Dexie IndexedDB & Seed data
 │   │   ├── index.ts                # Khởi tạo HanWriDatabase & các hàm CRUD
@@ -51,13 +55,14 @@ HanWri/
 | F3 | Chế độ luyện viết 2: Nhận diện chữ viết tự do (Freehand Recognition) | 📋 Lập kế hoạch | Khung vẽ tự do + thuật toán đối soát/nhận diện |
 | F4 | Quản lý bộ từ vựng (Word Decks / Lists) | ⏳ Đang thực hiện | Hoàn thành tầng dữ liệu Dexie IndexedDB, CRUD helpers và dữ liệu mẫu HSK 1 (UI ở Task 8) |
 | F5 | Nhập/Xuất bộ từ qua CSV / Excel (.xlsx) | 📋 Lập kế hoạch | Hỗ trợ template chuẩn, import hàng loạt |
-| F6 | Giao diện người dùng & Tối ưu trải nghiệm (UI/UX) | 📋 Lập kế hoạch | Giao diện bảng viết ô chữ Mễ (米字格) / Điền (田字格), dark/light mode |
+| F6 | Giao diện người dùng & Tối ưu trải nghiệm (UI/UX) | ⏳ Đang thực hiện | Hoàn thành component `CharacterGrid` (米字格 & 田字格), responsive layout |
 
 *Ký hiệu: 📋 Lập kế hoạch | ⏳ Đang thực hiện | ✅ Hoàn thành*
 
 ---
 
 ## 3. Lịch sử cập nhật phiên làm việc (Changelog)
+- **2026-11-02 (Task 3)**: Hoàn thành component `CharacterGrid` kết xuất khung ô chữ luyện viết Hán tự bằng SVG theo chuẩn Mễ tự cách (米字格 - MiZiGe) và Điền tự cách (田字格 - TianZiGe), hỗ trợ tùy chỉnh kích thước, nét đứt, màu sắc và chế độ `none`. Viết unit test theo TDD kiểm thử đầy đủ các chế độ hiển thị và tùy biến CSS style. 100% test pass (13/13 tests) và TypeScript strict check thành công.
 - **2026-11-02 (Task 2)**: Hoàn thành thiết lập tầng Database & Data Models với Dexie IndexedDB (`HanWriDatabase`). Định nghĩa interfaces (`Deck`, `Word`, `RecognitionCandidate`, `HandwritingRecognitionResult`, `PracticeStats`). Cài đặt `fake-indexeddb`, viết unit test theo TDD kiểm thử hàm khởi tạo seed dữ liệu HSK 1 và các hàm CRUD (`createDeck`, `addWordToDeck`, `getDeckWithWords`, `deleteWord`). 100% test pass và TypeScript strict mode xác thực thành công (0 errors).
 - **2026-11-02 (Task 1)**: Hoàn thành thiết lập nền tảng dự án (Vite 8, React 19, TypeScript, TailwindCSS v3, Vitest 5). Thiết lập alias `@/`, cấu hình màu sắc cổ phong `chinese.*`, viết unit test theo TDD cho `App.tsx`, build và test thành công 100%.
 - **2026-11-02 (Khởi tạo)**: Khởi tạo tài liệu `PROJECT_STATE.md`, phân tích yêu cầu kỹ thuật và xây dựng lộ trình các giai đoạn phát triển.
