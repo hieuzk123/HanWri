@@ -1,6 +1,6 @@
 # PROJECT_STATE: HanWri (Chinese Handwriting & Character Practice App)
 
-> **Trạng thái hiện tại**: Giai đoạn 2 - Thành phần giao diện & Canvas (Task 7: Handwriting Recognition Service & Feedback Flow)  
+> **Trạng thái hiện tại**: Giai đoạn 3 - Quản lý bộ từ & Nhập xuất (Task 8: Deck Management & Practice Session UI)  
 > **Cập nhật lần cuối**: 2026-11-03  
 > **Mục tiêu dự án**: Xây dựng ứng dụng web/desktop hỗ trợ học và luyện viết chữ Hán dựa trên thư viện `hanzi-writer`, tích hợp quản lý bộ từ, hoạt ảnh nét viết, 2 chế độ luyện viết (đồ nét theo thứ tự & nhận diện viết tự do), cùng khả năng nhập từ vựng qua CSV/Excel.
 
@@ -17,6 +17,15 @@ HanWri/
 │   └── icons.svg
 ├── src/
 │   ├── components/
+│   │   ├── deck/
+│   │   │   ├── AddWordModal.test.tsx    # Unit tests cho AddWordModal (render, validate, submit, close)
+│   │   │   ├── AddWordModal.tsx         # Modal nhập và thêm từ mới thủ công vào bộ từ
+│   │   │   ├── CreateDeckModal.test.tsx # Unit tests cho CreateDeckModal (render, validate, submit, close)
+│   │   │   ├── CreateDeckModal.tsx      # Modal tạo bộ từ vựng mới
+│   │   │   ├── DeckDetail.test.tsx      # Unit tests cho DeckDetail & Practice session (view, add, delete, modes, nav)
+│   │   │   ├── DeckDetail.tsx           # Chi tiết bộ từ, danh sách từ & Practice mode switcher (Animation, Quiz, Freehand)
+│   │   │   ├── DeckList.test.tsx        # Unit tests cho DeckList (render list, card click, create, import, empty state)
+│   │   │   └── DeckList.tsx             # Danh sách bộ từ vựng, số lượng từ, trigger tạo mới & import
 │   │   ├── grid/
 │   │   │   ├── CharacterGrid.test.tsx  # Unit tests kiểm thử khung ô chữ Mễ/Điền
 │   │   │   └── CharacterGrid.tsx       # Component SVG render ô chữ MiZiGe, TianZiGe, None
@@ -67,7 +76,7 @@ HanWri/
 | F1 | Hiển thị chữ & Hoạt ảnh nét viết (Stroke Animation) | ✅ Hoàn thành | Hoàn thành `StrokeAnimator` (HanziWriter wrapper, play/pause/reset/speed) & `WordContainer` (từ đơn & từ ghép) |
 | F2 | Chế độ luyện viết 1: Đồ nét theo mẫu (Guided Stroke Quiz) | ✅ Hoàn thành | Bắt lỗi nét sai, gợi ý nét (highlightStroke), đếm số lần viết sai, chúc mừng hoàn thành |
 | F3 | Chế độ luyện viết 2: Nhận diện chữ viết tự do (Freehand Recognition) | ✅ Hoàn thành | Hoàn thành khung vẽ `FreehandCanvas`, service `handwritingApi` (Google Input Tools API), đánh giá thứ hạng (1: hoàn hảo, 2-3: chính xác, >3: gần đúng, -1: sai) và `FreehandRecognitionView` với modal xem mẫu chuẩn `StrokeAnimator` |
-| F4 | Quản lý bộ từ vựng (Word Decks / Lists) | ⏳ Đang thực hiện | Hoàn thành tầng dữ liệu Dexie IndexedDB, CRUD helpers và dữ liệu mẫu HSK 1 (UI ở Task 8) |
+| F4 | Quản lý bộ từ vựng (Word Decks / Lists) | ✅ Hoàn thành | Tầng dữ liệu Dexie IndexedDB + UI `DeckList`, `DeckDetail` (tích hợp 3 chế độ luyện tập), `AddWordModal`, `CreateDeckModal` |
 | F5 | Nhập/Xuất bộ từ qua CSV / Excel (.xlsx) | 📋 Lập kế hoạch | Hỗ trợ template chuẩn, import hàng loạt |
 | F6 | Giao diện người dùng & Tối ưu trải nghiệm (UI/UX) | ⏳ Đang thực hiện | Hoàn thành component `CharacterGrid` (米字格 & 田字格), responsive layout |
 
@@ -76,6 +85,7 @@ HanWri/
 ---
 
 ## 3. Lịch sử cập nhật phiên làm việc (Changelog)
+- **2026-11-03 (Task 8)**: Hoàn thành giao diện quản lý bộ từ vựng và phiên luyện tập tương tác (Deck Management & Practice Session UI). Triển khai `DeckList` (hiển thị danh sách bộ từ, số lượng từ, trạng thái rỗng, nút trigger tạo bộ từ & nhập Excel/CSV), `DeckDetail` (danh sách từ, nút thêm từ, xóa từ, điều hướng từ trước/sau, bộ chuyển 3 chế độ luyện tập: xem hoạt ảnh nét, đồ chữ theo thứ tự, khung viết & nhận diện), `AddWordModal` (form nhập Hán tự, Pinyin, Hán Việt, Nghĩa, Ghi chú kèm xác thực), và `CreateDeckModal` (form tạo bộ từ kèm xác thực). Triển khai theo chuẩn TDD với 22 unit tests mới (tổng 74/74 tests toàn dự án), `oxlint` 0 lỗi/cảnh báo, `tsc -b` 0 lỗi.
 - **2026-11-03 (Task 7)**: Hoàn thành service `handwritingApi` và component `FreehandRecognitionView`. Triển khai `recognizeHandwriting` gửi ink vector tới Google Input Tools Handwriting IME API, tính toán thứ hạng chữ mục tiêu trong danh sách ứng viên qua `evaluateMatch`. Component `FreehandRecognitionView` hiển thị trạng thái đánh giá phản hồi trực quan theo 4 cấp bậc (Tuyệt vời rank 1, Chính xác rank 2-3, Gần đúng rank >3, Chưa nhận diện đúng rank -1) và modal overlay xem lại mẫu viết chuẩn với `StrokeAnimator`. 100% test pass (52/52 tests toàn dự án), `oxlint` 0 lỗi/cảnh báo, `tsc -b` 0 lỗi.
 - **2026-11-03 (Task 6)**: Hoàn thành component `FreehandCanvas` (khung vẽ tự do trên nền `CharacterGrid` Mễ tự cách, thu thập vector ink theo chuẩn Google Input Tools `[xs, ys, timestamps]`, hỗ trợ các thao tác "Xóa nét" - Undo, "Xóa hết" - Clear, và "Kiểm tra" - trigger `onCheck(strokes, width, height)` gửi dữ liệu nét vẽ). Triển khai theo quy trình TDD với 9 unit tests kiểm thử render, trạng thái vô hiệu hóa/kích hoạt của các nút điều khiển, tương tác pointer capture, undo, clear, và `isLoading`. 100% test pass (38/38 tests), `oxlint` 0 lỗi/cảnh báo, `tsc -b` 0 lỗi.
 - **2026-11-03 (Task 5)**: Hoàn thành component `GuidedQuiz` (bọc engine quiz của `hanzi-writer` trên nền `CharacterGrid` Mễ tự cách, theo dõi tiến độ nét viết `currentStroke / totalStrokes`, bắt lỗi sai nét trực tiếp, nút "Gợi ý nét" gọi `highlightStroke`, nút "Làm lại" khởi động lại bài luyện tập, và hiển thị overlay chúc mừng kèm số lần sai khi hoàn thành). Triển khai theo quy trình TDD với đầy đủ 7 unit tests kiểm thử trạng thái, callbacks và mocks. 100% test pass (29/29 tests), `oxlint` 0 cảnh báo/lỗi, `tsc -b` 0 lỗi.
@@ -90,13 +100,23 @@ HanWri/
 
 ## 4. Hướng dẫn tiếp tục phiên làm việc tiếp theo (Resume Instructions for Next Session)
 
-- **Vị trí hiện tại**: Đã hoàn thành nghiệm thu **Task 1, Task 2, Task 3, Task 4, Task 5, Task 6, Task 7**.
-- **Task tiếp theo**: **Task 8: Deck Management & Word List UI** (Quản lý bộ từ vựng, danh sách từ, tạo/sửa/xóa bộ từ).
-- **Kế hoạch chi tiết**: Tham khảo [docs/superpowers/plans/2026-11-02-hanwri-chinese-handwriting-app.md](file:///d:/HanWri/docs/superpowers/plans/2026-11-02-hanwri-chinese-handwriting-app.md#L1134).
+- **Vị trí hiện tại**: Đã hoàn thành nghiệm thu **Task 1, Task 2, Task 3, Task 4, Task 5, Task 6, Task 7, Task 8**.
+- **Task tiếp theo**: **Task 9: CSV & Excel (.xlsx) Import / Export Service & UI** (`fileImportService`, `DeckImporter`).
+- **Kế hoạch chi tiết**: Tham khảo [docs/superpowers/plans/2026-11-02-hanwri-chinese-handwriting-app.md](file:///d:/HanWri/docs/superpowers/plans/2026-11-02-hanwri-chinese-handwriting-app.md#L1691).
 - **Lệnh kiểm tra hiện trạng**:
   ```bash
-  # Chạy toàn bộ 52 unit tests:
+  # Chạy toàn bộ 74 unit tests:
   npx vitest run
+
+  # Kiểm tra TypeScript strict mode:
+  npx tsc -b
+
+  # Kiểm tra linter:
+  npm run lint
+
+  # Khởi chạy server phát triển local:
+  npm run dev
+  ```
 
   # Kiểm tra TypeScript strict mode:
   npx tsc -b
