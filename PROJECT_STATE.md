@@ -1,8 +1,8 @@
 # PROJECT_STATE: HanWri (Chinese Handwriting & Character Practice App)
 
-> **Trạng thái hiện tại**: Giai đoạn 3 - Quản lý bộ từ & Nhập xuất (Task 9: CSV & Excel (.xlsx) Import / Export Service & UI)  
+> **Trạng thái hiện tại**: Hoàn thành toàn diện các tính năng cốt lõi (Task 10: App Integration, Quick Practice Modal & Polish) - Sẵn sàng nghiệm thu & đóng gói  
 > **Cập nhật lần cuối**: 2026-11-03  
-> **Mục tiêu dự án**: Xây dựng ứng dụng web/desktop hỗ trợ học và luyện viết chữ Hán dựa trên thư viện `hanzi-writer`, tích hợp quản lý bộ từ, hoạt ảnh nét viết, 2 chế độ luyện viết (đồ nét theo thứ tự & nhận diện viết tự do), cùng khả năng nhập từ vựng qua CSV/Excel.
+> **Mục tiêu dự án**: Xây dựng ứng dụng web/desktop hỗ trợ học và luyện viết chữ Hán dựa trên thư viện `hanzi-writer`, tích hợp quản lý bộ từ, hoạt ảnh nét viết, 2 chế độ luyện viết (đồ nét theo thứ tự & nhận diện viết tự do), cùng khả năng nhập từ vựng qua CSV/Excel và luyện viết nhanh mọi chữ Hán.
 
 ---
 
@@ -55,8 +55,8 @@ HanWri/
 │   │   └── setup.ts                # Cấu hình môi trường kiểm thử Vitest + jest-dom
 │   ├── types/
 │   │   └── index.ts                # Định nghĩa types & interfaces: Deck, Word, PracticeStats,...
-│   ├── App.test.tsx                # Unit test kiểm tra giao diện khởi đầu App
-│   ├── App.tsx                     # Component gốc HanWri với Header & Welcome card
+│   ├── App.test.tsx                # Integration tests kiểm tra toàn bộ luồng App, seed DB, DeckList, DeckDetail, Quick Practice, Modals
+│   ├── App.tsx                     # Component gốc HanWri kết nối Header, Quick Practice, DeckList, DeckDetail, Modals
 │   ├── index.css                   # Tailwind CSS directives & global typography
 │   └── main.tsx                    # Entry point React 19 DOM render
 ├── index.html                      # HTML root template
@@ -82,13 +82,14 @@ HanWri/
 | F3 | Chế độ luyện viết 2: Nhận diện chữ viết tự do (Freehand Recognition) | ✅ Hoàn thành | Hoàn thành khung vẽ `FreehandCanvas`, service `handwritingApi` (Google Input Tools API), đánh giá thứ hạng (1: hoàn hảo, 2-3: chính xác, >3: gần đúng, -1: sai) và `FreehandRecognitionView` với modal xem mẫu chuẩn `StrokeAnimator` |
 | F4 | Quản lý bộ từ vựng (Word Decks / Lists) | ✅ Hoàn thành | Tầng dữ liệu Dexie IndexedDB + UI `DeckList`, `DeckDetail` (tích hợp 3 chế độ luyện tập), `AddWordModal`, `CreateDeckModal` |
 | F5 | Nhập/Xuất bộ từ qua CSV / Excel (.xlsx) | ✅ Hoàn thành | Service `fileImportService` (SheetJS xlsx, chuẩn hóa đa tiêu đề, file mẫu) & Modal UI `DeckImporter` (kéo thả, preview, auto deck title) |
-| F6 | Giao diện người dùng & Tối ưu trải nghiệm (UI/UX) | ⏳ Đang thực hiện | Hoàn thành component `CharacterGrid` (米字格 & 田字格), responsive layout |
+| F6 | Giao diện người dùng & Tối ưu trải nghiệm (UI/UX) | ✅ Hoàn thành | Hoàn thành component `CharacterGrid` (米字格 & 田字格), responsive layout, Quick Practice drawer/modal, thanh tìm kiếm luyện nhanh |
 
 *Ký hiệu: 📋 Lập kế hoạch | ⏳ Đang thực hiện | ✅ Hoàn thành*
 
 ---
 
 ## 3. Lịch sử cập nhật phiên làm việc (Changelog)
+- **2026-11-03 (Task 10)**: Hoàn thành tích hợp toàn diện ứng dụng `App.tsx` (App Integration, Quick Practice Modal & Polish). Kết nối toàn bộ luồng khởi tạo cơ sở dữ liệu IndexedDB Dexie và nạp dữ liệu mẫu HSK 1 ban đầu, hiển thị `DeckList` và `DeckDetail`, tích hợp 3 modal quản lý (`CreateDeckModal`, `AddWordModal`, `DeckImporter`), hộp thoại xác nhận an toàn trước khi xóa từ vựng (Confirmation prompt modal). Triển khai tính năng "Luyện viết nhanh" (Quick Practice) trên Header cho phép người dùng gõ bất kỳ chữ/từ Hán nào (VD: "爱", "你好") và luyện tập ngay lập tức qua 3 chế độ (Xem hoạt ảnh nét `StrokeAnimator`, Đồ chữ theo thứ tự `GuidedQuiz`, Khung viết & Nhận diện `FreehandRecognitionView`) mà không cần tạo hay thêm vào bộ từ trước. Viết integration test toàn diện với 8 kịch bản kiểm thử trong `App.test.tsx`. Đạt 100/100 tests toàn dự án (15 test files), `oxlint` 0 lỗi/cảnh báo, `tsc -b` 0 lỗi.
 - **2026-11-03 (Task 9)**: Hoàn thành service `fileImportService` và component `DeckImporter` cho việc nhập bộ từ qua bảng tính Excel (.xlsx, .xls) và CSV. Triển khai chuẩn hóa header đa ngôn ngữ/biến thể ('Chữ Hán', 'Từ vựng', 'hanzi', 'Phiên âm', 'pinyin', 'Hán Việt', 'sino_vietnamese', 'Nghĩa', 'meaning', 'Ghi chú', 'notes'), lọc hàng trống/hợp lệ, sinh và tải file Excel mẫu `downloadSampleExcelTemplate` / `generateSampleExcelTemplate`. Triển khai modal `DeckImporter` với khu vực kéo-thả trực quan, tự động đặt tên bộ từ theo tên file, đếm trước số lượng từ hợp lệ, xử lý lỗi chi tiết và xác nhận nhập `onImportSuccess`. 19 unit tests mới (tổng 93/93 tests toàn dự án), `oxlint` 0 lỗi/cảnh báo, `tsc -b` 0 lỗi.
 - **2026-11-03 (Task 8)**: Hoàn thành giao diện quản lý bộ từ vựng và phiên luyện tập tương tác (Deck Management & Practice Session UI). Triển khai `DeckList` (hiển thị danh sách bộ từ, số lượng từ, trạng thái rỗng, nút trigger tạo bộ từ & nhập Excel/CSV), `DeckDetail` (danh sách từ, nút thêm từ, xóa từ, điều hướng từ trước/sau, bộ chuyển 3 chế độ luyện tập: xem hoạt ảnh nét, đồ chữ theo thứ tự, khung viết & nhận diện), `AddWordModal` (form nhập Hán tự, Pinyin, Hán Việt, Nghĩa, Ghi chú kèm xác thực), và `CreateDeckModal` (form tạo bộ từ kèm xác thực). Triển khai theo chuẩn TDD với 22 unit tests mới (tổng 74/74 tests toàn dự án), `oxlint` 0 lỗi/cảnh báo, `tsc -b` 0 lỗi.
 - **2026-11-03 (Task 7)**: Hoàn thành service `handwritingApi` và component `FreehandRecognitionView`. Triển khai `recognizeHandwriting` gửi ink vector tới Google Input Tools Handwriting IME API, tính toán thứ hạng chữ mục tiêu trong danh sách ứng viên qua `evaluateMatch`. Component `FreehandRecognitionView` hiển thị trạng thái đánh giá phản hồi trực quan theo 4 cấp bậc (Tuyệt vời rank 1, Chính xác rank 2-3, Gần đúng rank >3, Chưa nhận diện đúng rank -1) và modal overlay xem lại mẫu viết chuẩn với `StrokeAnimator`. 100% test pass (52/52 tests toàn dự án), `oxlint` 0 lỗi/cảnh báo, `tsc -b` 0 lỗi.
@@ -104,12 +105,11 @@ HanWri/
 
 ## 4. Hướng dẫn tiếp tục phiên làm việc tiếp theo (Resume Instructions for Next Session)
 
-- **Vị trí hiện tại**: Đã hoàn thành nghiệm thu **Task 1, Task 2, Task 3, Task 4, Task 5, Task 6, Task 7, Task 8, Task 9**.
-- **Task tiếp theo**: **Task 10: Complete App Assembly, Navigation & Integration Testing** (Kết nối App.tsx toàn bộ luồng DeckList -> DeckDetail -> Practice modes -> Modals CRUD & Import).
-- **Kế hoạch chi tiết**: Tham khảo [docs/superpowers/plans/2026-11-02-hanwri-chinese-handwriting-app.md](file:///d:/HanWri/docs/superpowers/plans/2026-11-02-hanwri-chinese-handwriting-app.md#L1825).
-- **Lệnh kiểm tra hiện trạng**:
+- **Vị trí hiện tại**: Đã hoàn thành toàn bộ **Task 1 đến Task 10** theo đúng kế hoạch kỹ thuật. Toàn bộ tính năng F0 đến F6 đã hoàn thành 100%.
+- **Tình trạng kiểm thử**: 100/100 tests passed (15 test files), `oxlint` 0 errors / 0 warnings, `tsc -b` 0 errors.
+- **Các lệnh kiểm thử và build production**:
   ```bash
-  # Chạy toàn bộ 93 unit tests:
+  # Chạy toàn bộ 100 unit & integration tests:
   npx vitest run
 
   # Kiểm tra TypeScript strict mode:
@@ -118,6 +118,9 @@ HanWri/
   # Kiểm tra linter:
   npm run lint
 
-  # Khởi chạy server phát triển local:
-  npm run dev
+  # Build gói ứng dụng production:
+  npm run build
+
+  # Khởi chạy preview production:
+  npm run preview
   ```
