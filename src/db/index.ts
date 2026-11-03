@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie';
-import type { Deck, Word } from '../types';
+import type { Deck, Word, ReviewRating } from '../types';
 import { STARTER_WORDS_DATA } from './seed';
+import { calculateNextReview } from '../services/srsService';
 
 export class HanWriDatabase extends Dexie {
   decks!: Table<Deck, number>;
@@ -62,6 +63,19 @@ export async function createDeck(
   return id;
 }
 
+export async function updateDeck(
+  deckId: number,
+  changes: { title?: string; description?: string }
+): Promise<void> {
+  const deck = await db.decks.get(deckId);
+  if (!deck) return;
+
+  await db.decks.update(deckId, {
+    ...changes,
+    updatedAt: Date.now(),
+  });
+}
+
 export async function addWordToDeck(word: Omit<Word, 'id'>): Promise<number> {
   const wordId = await db.words.add(word as Word);
   const count = await db.words.where('deckId').equals(word.deckId).count();
@@ -70,6 +84,48 @@ export async function addWordToDeck(word: Omit<Word, 'id'>): Promise<number> {
     updatedAt: Date.now(),
   });
   return wordId;
+}
+
+export async function updateWord(
+  wordId: number,
+  changes: Partial<Omit<Word, 'id' | 'deckId'>>
+): Promise<void> {
+  const word = await db.words.get(wordId);
+  if (!word) return;
+
+  await db.words.update(wordId, {
+    ...changes,
+  });
+
+  await db.decks.update(word.deckId, {
+    updatedAt: Date.now(),
+  });
+}
+
+export async function recordWordReview(
+  wordId: number,
+  rating: ReviewRating,
+  now: number = Date.now()
+): Promise<Word | null> {
+  const word = await db.words.get(wordId);
+  if (!word) return null;
+
+  const srsResult = calculateNextReview(word, rating, now);
+  const practiceCount = (word.practiceCount ?? 0) + 1;
+
+  await db.words.update(wordId, {
+    nextReviewDate: srsResult.nextReviewDate,
+    interval: srsResult.interval,
+    easeFactor: srsResult.easeFactor,
+    repetitions: srsResult.repetitions,
+    practiceCount,
+  });
+
+  await db.decks.update(word.deckId, {
+    updatedAt: now,
+  });
+
+  return (await db.words.get(wordId)) ?? null;
 }
 
 export async function deleteWord(wordId: number): Promise<void> {

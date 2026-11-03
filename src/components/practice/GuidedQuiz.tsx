@@ -6,23 +6,30 @@ import CharacterGrid from '../grid/CharacterGrid';
 export interface GuidedQuizProps {
   character: string;
   size?: number;
-  onQuizComplete?: () => void;
+  showOutline?: boolean;
+  onQuizComplete?: (mistakes: number) => void;
+  onMistake?: (mistakes: number) => void;
   className?: string;
 }
 
 export const GuidedQuiz: React.FC<GuidedQuizProps> = ({
   character,
   size = 320,
+  showOutline = true,
   onQuizComplete,
+  onMistake,
   className = '',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const writerRef = useRef<HanziWriter | null>(null);
   const onQuizCompleteRef = useRef(onQuizComplete);
+  const onMistakeRef = useRef(onMistake);
+  const mistakesRef = useRef(0);
 
   useEffect(() => {
     onQuizCompleteRef.current = onQuizComplete;
-  }, [onQuizComplete]);
+    onMistakeRef.current = onMistake;
+  }, [onQuizComplete, onMistake]);
 
   const [mistakes, setMistakes] = useState(0);
   const [totalStrokes, setTotalStrokes] = useState(0);
@@ -34,11 +41,17 @@ export const GuidedQuiz: React.FC<GuidedQuizProps> = ({
     if (!writer) return;
     setIsCompleted(false);
     setMistakes(0);
+    mistakesRef.current = 0;
     setCurrentStroke(0);
 
     writer.quiz({
       onMistake: () => {
-        setMistakes((prev) => prev + 1);
+        const nextMistakes = mistakesRef.current + 1;
+        mistakesRef.current = nextMistakes;
+        setMistakes(nextMistakes);
+        if (onMistakeRef.current) {
+          onMistakeRef.current(nextMistakes);
+        }
       },
       onCorrectStroke: (strokeData) => {
         setCurrentStroke(strokeData.strokeNum + 1);
@@ -46,7 +59,7 @@ export const GuidedQuiz: React.FC<GuidedQuizProps> = ({
       onComplete: () => {
         setIsCompleted(true);
         if (onQuizCompleteRef.current) {
-          onQuizCompleteRef.current();
+          onQuizCompleteRef.current(mistakesRef.current);
         }
       },
     });
@@ -60,7 +73,7 @@ export const GuidedQuiz: React.FC<GuidedQuizProps> = ({
       width: size,
       height: size,
       padding: 20,
-      showOutline: true,
+      showOutline,
       strokeColor: '#2c3e50',
       outlineColor: '#e2e8f0',
       highlightColor: '#f39c12',
@@ -80,7 +93,7 @@ export const GuidedQuiz: React.FC<GuidedQuizProps> = ({
     return () => {
       writerRef.current = null;
     };
-  }, [character, size]);
+  }, [character, size, showOutline]);
 
   const handleHint = () => {
     if (writerRef.current && !isCompleted) {

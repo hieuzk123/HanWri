@@ -7,6 +7,9 @@ import {
   createDeck,
   addWordToDeck,
   deleteWord,
+  updateDeck,
+  updateWord,
+  recordWordReview,
 } from './index';
 
 describe('Database & Seed', () => {
@@ -114,6 +117,76 @@ describe('Database & Seed', () => {
       const remainingWords = await db.words.where('deckId').equals(deckId).toArray();
       expect(remainingWords.length).toBe(1);
       expect(remainingWords[0].id).toBe(word2Id);
+    });
+
+    it('updateDeck updates title and description and refreshes updatedAt', async () => {
+      const deckId = await createDeck('Tiêu đề cũ', 'Mô tả cũ');
+      const initialDeck = await db.decks.get(deckId);
+      const initialUpdatedAt = initialDeck!.updatedAt;
+
+      await new Promise((res) => setTimeout(res, 10));
+
+      await updateDeck(deckId, {
+        title: 'Tiêu đề mới',
+        description: 'Mô tả đã được sửa',
+      });
+
+      const updatedDeck = await db.decks.get(deckId);
+      expect(updatedDeck?.title).toBe('Tiêu đề mới');
+      expect(updatedDeck?.description).toBe('Mô tả đã được sửa');
+      expect(updatedDeck?.updatedAt).toBeGreaterThanOrEqual(initialUpdatedAt);
+    });
+
+    it('updateWord updates word fields and refreshes deck updatedAt', async () => {
+      const deckId = await createDeck('Bộ từ vựng ngữ pháp');
+      const wordId = await addWordToDeck({
+        deckId,
+        hanzi: '学',
+        pinyin: 'xué',
+        meaning: 'Học',
+      });
+
+      const initialDeck = await db.decks.get(deckId);
+      const initialUpdatedAt = initialDeck!.updatedAt;
+
+      await new Promise((res) => setTimeout(res, 10));
+
+      await updateWord(wordId, {
+        hanzi: '学习',
+        pinyin: 'xuéxí',
+        sinoVietnamese: 'Học tập',
+        meaning: 'Học tập, nghiên cứu',
+        notes: 'Thường dùng trong học tập chính quy',
+      });
+
+      const updatedWord = await db.words.get(wordId);
+      expect(updatedWord?.hanzi).toBe('学习');
+      expect(updatedWord?.pinyin).toBe('xuéxí');
+      expect(updatedWord?.sinoVietnamese).toBe('Học tập');
+      expect(updatedWord?.meaning).toBe('Học tập, nghiên cứu');
+      expect(updatedWord?.notes).toBe('Thường dùng trong học tập chính quy');
+
+      const updatedDeck = await db.decks.get(deckId);
+      expect(updatedDeck?.updatedAt).toBeGreaterThanOrEqual(initialUpdatedAt);
+    });
+
+    it('recordWordReview updates SRS fields and increments practiceCount', async () => {
+      const deckId = await createDeck('Bộ ôn tập');
+      const wordId = await addWordToDeck({
+        deckId,
+        hanzi: '爱',
+        pinyin: 'ài',
+        meaning: 'Yêu',
+      });
+
+      const fixedNow = 1700000000000;
+      const updated = await recordWordReview(wordId, 3, fixedNow);
+
+      expect(updated).not.toBeNull();
+      expect(updated?.interval).toBe(3);
+      expect(updated?.repetitions).toBe(1);
+      expect(updated?.practiceCount).toBe(1);
+      expect(updated?.nextReviewDate).toBe(fixedNow + 3 * 24 * 60 * 60 * 1000);
     });
   });
 });

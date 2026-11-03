@@ -14,11 +14,33 @@ vi.mock('./components/practice/StrokeAnimator', () => ({
 }));
 
 vi.mock('./components/practice/GuidedQuiz', () => ({
-  default: ({ character }: { character: string }) => (
-    <div data-testid="mock-guided-quiz">Quiz: {character}</div>
+  default: ({
+    character,
+    onQuizComplete,
+  }: {
+    character: string;
+    onQuizComplete?: (mistakes: number) => void;
+  }) => (
+    <div data-testid="mock-guided-quiz">
+      <span>Quiz: {character}</span>
+      <button type="button" onClick={() => onQuizComplete && onQuizComplete(0)}>
+        Complete QuizChar
+      </button>
+    </div>
   ),
-  GuidedQuiz: ({ character }: { character: string }) => (
-    <div data-testid="mock-guided-quiz">Quiz: {character}</div>
+  GuidedQuiz: ({
+    character,
+    onQuizComplete,
+  }: {
+    character: string;
+    onQuizComplete?: (mistakes: number) => void;
+  }) => (
+    <div data-testid="mock-guided-quiz">
+      <span>Quiz: {character}</span>
+      <button type="button" onClick={() => onQuizComplete && onQuizComplete(0)}>
+        Complete QuizChar
+      </button>
+    </div>
   ),
 }));
 
@@ -37,11 +59,12 @@ describe('App Full Integration', () => {
     await db.words.clear();
   });
 
-  it('renders HanWri header and quick practice search input', async () => {
+  it('renders HanWri header, quick practice search input, and Ôn tập button', async () => {
     render(<App />);
     expect(screen.getByRole('heading', { name: /HanWri/i })).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Nhập từ hoặc chữ Hán muốn luyện/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Luyện ngay/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Ôn tập/i })).toBeInTheDocument();
   });
 
   it('initializes and renders default seeded decks', async () => {
@@ -227,6 +250,111 @@ describe('App Full Integration', () => {
     // Confirmation modal closes and word is removed
     await waitFor(() => {
       expect(screen.queryByText(/Xác nhận xóa từ/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it('edits a deck title and description via EditDeckModal and updates UI', async () => {
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText(/HSK 1 Căn bản/i)).toBeInTheDocument();
+    });
+
+    // Click edit on the deck card in DeckList
+    const editDeckBtn = screen.getByLabelText(/Chỉnh sửa bộ từ HSK 1 Căn bản/i);
+    fireEvent.click(editDeckBtn);
+
+    // Modal opens
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Chỉnh sửa bộ từ' })).toBeInTheDocument();
+    });
+
+    const titleInput = screen.getByLabelText(/Tên bộ từ/i);
+    const descInput = screen.getByLabelText(/Mô tả/i);
+    const submitBtn = screen.getByRole('button', { name: 'Lưu thay đổi' });
+
+    fireEvent.change(titleInput, { target: { value: 'HSK 1 Đã sửa' } });
+    fireEvent.change(descInput, { target: { value: 'Mô tả bộ từ đã cập nhật' } });
+    fireEvent.click(submitBtn);
+
+    // Modal closes and updated title appears
+    await waitFor(() => {
+      expect(screen.getByText('HSK 1 Đã sửa')).toBeInTheDocument();
+      expect(screen.getByText('Mô tả bộ từ đã cập nhật')).toBeInTheDocument();
+    });
+  });
+
+  it('edits a word via EditWordModal inside DeckDetail and updates word list', async () => {
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText(/HSK 1 Căn bản/i)).toBeInTheDocument();
+    });
+
+    // Enter DeckDetail
+    fireEvent.click(screen.getByText('HSK 1 Căn bản'));
+    await waitFor(() => {
+      expect(screen.getByText('你好')).toBeInTheDocument();
+    });
+
+    // Click edit button for '你好'
+    const editWordBtn = screen.getByLabelText('Chỉnh sửa từ 你好');
+    fireEvent.click(editWordBtn);
+
+    // Modal opens
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Chỉnh sửa từ vựng' })).toBeInTheDocument();
+    });
+
+    const meaningInput = screen.getByLabelText(/Ý nghĩa/i);
+    const notesInput = screen.getByLabelText(/Ghi chú/i);
+    const submitBtn = screen.getByRole('button', { name: 'Lưu thay đổi' });
+
+    fireEvent.change(meaningInput, { target: { value: 'Chào bạn hữu nghị' } });
+    fireEvent.change(notesInput, { target: { value: 'Dùng xã giao phổ biến' } });
+    fireEvent.click(submitBtn);
+
+    // Modal closes and updated meaning appears
+    await waitFor(() => {
+      expect(screen.getByText('Chào bạn hữu nghị')).toBeInTheDocument();
+    });
+  });
+
+  it('opens ReviewModal when clicking Ôn tập button, selects a deck, and records SRS rating', async () => {
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText(/HSK 1 Căn bản/i)).toBeInTheDocument();
+    });
+
+    // Click "Ôn tập" button on header
+    fireEvent.click(screen.getByRole('button', { name: /Ôn tập/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Ôn tập từ vựng/i })).toBeInTheDocument();
+    });
+
+    // Click on the seeded deck inside ReviewModal
+    const deckInModal = screen.getByText('8 cần ôn');
+    fireEvent.click(deckInModal);
+
+    // First word is '你' (pinyin 'nǐ')
+    await waitFor(() => {
+      expect(screen.getByText('nǐ')).toBeInTheDocument();
+    });
+
+    // Pass first word '你'
+    fireEvent.click(screen.getByText('Complete QuizChar'));
+
+    // 4 SRS buttons appear
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Quên rồi/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Tốt/i })).toBeInTheDocument();
+    });
+
+    // Rate as 'Tốt' (3 days)
+    fireEvent.click(screen.getByRole('button', { name: /Tốt/i }));
+
+    // Moves to second word '好' (hǎo)
+    await waitFor(() => {
+      expect(screen.getByText('hǎo')).toBeInTheDocument();
     });
   });
 });

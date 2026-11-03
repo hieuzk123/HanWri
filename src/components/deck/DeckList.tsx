@@ -1,12 +1,13 @@
 import React from 'react';
 import type { Deck } from '../../types';
-import { BookOpen, Plus, FileSpreadsheet, ChevronRight, Inbox } from 'lucide-react';
+import { BookOpen, Plus, FileSpreadsheet, ChevronRight, Inbox, Pencil } from 'lucide-react';
 
 export interface DeckListProps {
   decks: Deck[];
   onSelectDeck: (deck: Deck) => void;
   onOpenCreateModal: () => void;
   onOpenImportModal: () => void;
+  onEditDeck?: (deck: Deck) => void;
 }
 
 export const DeckList: React.FC<DeckListProps> = ({
@@ -14,6 +15,7 @@ export const DeckList: React.FC<DeckListProps> = ({
   onSelectDeck,
   onOpenCreateModal,
   onOpenImportModal,
+  onEditDeck,
 }) => {
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -87,7 +89,22 @@ export const DeckList: React.FC<DeckListProps> = ({
                 </div>
               </div>
 
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-chinese-red group-hover:translate-x-1 transition" />
+              <div className="flex items-center gap-1">
+                {onEditDeck && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditDeck(deck);
+                    }}
+                    aria-label={`Chỉnh sửa bộ từ ${deck.title}`}
+                    className="p-2 text-gray-400 hover:text-chinese-red hover:bg-red-50 rounded-lg transition cursor-pointer"
+                    title="Chỉnh sửa bộ từ"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-chinese-red group-hover:translate-x-1 transition" />
+              </div>
             </div>
           ))}
         </div>

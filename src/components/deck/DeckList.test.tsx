@@ -53,6 +53,26 @@ describe('DeckList Component', () => {
     expect(handleSelect).toHaveBeenCalledWith(dummyDecks[0]);
   });
 
+  it('calls onEditDeck when edit button on deck card is clicked without triggering onSelectDeck', () => {
+    const handleSelect = vi.fn();
+    const handleEdit = vi.fn();
+    render(
+      <DeckList
+        decks={dummyDecks}
+        onSelectDeck={handleSelect}
+        onOpenCreateModal={vi.fn()}
+        onOpenImportModal={vi.fn()}
+        onEditDeck={handleEdit}
+      />
+    );
+
+    const editBtn = screen.getByLabelText('Chỉnh sửa bộ từ HSK 1 Căn bản');
+    fireEvent.click(editBtn);
+
+    expect(handleEdit).toHaveBeenCalledWith(dummyDecks[0]);
+    expect(handleSelect).not.toHaveBeenCalled();
+  });
+
   it('calls onOpenCreateModal when "Tạo bộ từ mới" is clicked', () => {
     const handleCreate = vi.fn();
     render(

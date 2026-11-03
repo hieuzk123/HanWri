@@ -62,6 +62,13 @@ describe('GuidedQuiz Component', () => {
     });
   });
 
+  it('supports showOutline={false} for blind review mode', () => {
+    render(<GuidedQuiz character="你" size={300} showOutline={false} />);
+
+    const [, , options] = vi.mocked(HanziWriter.create).mock.calls[0];
+    expect(options?.showOutline).toBe(false);
+  });
+
   it('handles onLoadCharDataSuccess and updates total strokes', () => {
     render(<GuidedQuiz character="好" size={300} />);
 
@@ -79,7 +86,8 @@ describe('GuidedQuiz Component', () => {
   });
 
   it('tracks mistakes and correct strokes during the quiz', () => {
-    render(<GuidedQuiz character="好" size={300} />);
+    const onMistake = vi.fn();
+    render(<GuidedQuiz character="好" size={300} onMistake={onMistake} />);
 
     act(() => {
       lastCreateOptions.onLoadCharDataSuccess({
@@ -98,6 +106,7 @@ describe('GuidedQuiz Component', () => {
     });
 
     expect(screen.getByText(/Sai: 1/i)).toBeInTheDocument();
+    expect(onMistake).toHaveBeenCalledWith(1);
 
     // Simulate correct stroke
     act(() => {
@@ -168,7 +177,7 @@ describe('GuidedQuiz Component', () => {
     expect(mockWriterInstance.quiz).toHaveBeenCalledTimes(2);
   });
 
-  it('displays completion overlay and triggers onQuizComplete callback', () => {
+  it('displays completion overlay and triggers onQuizComplete callback with mistake count', () => {
     const onComplete = vi.fn();
     render(<GuidedQuiz character="好" size={300} onQuizComplete={onComplete} />);
 
@@ -191,7 +200,7 @@ describe('GuidedQuiz Component', () => {
 
     expect(screen.getByText(/Hoàn thành xuất sắc!/i)).toBeInTheDocument();
     expect(screen.getByText(/Số lần viết sai nét: 2/i)).toBeInTheDocument();
-    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(2);
 
     // Hint button should be disabled when completed
     const hintBtn = screen.getByText(/Gợi ý nét/i).closest('button')!;

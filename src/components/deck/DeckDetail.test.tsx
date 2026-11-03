@@ -112,6 +112,61 @@ describe('DeckDetail Component', () => {
     expect(handleAdd).toHaveBeenCalledTimes(1);
   });
 
+  it('calls onEditDeck when edit deck button is clicked', () => {
+    const handleEditDeck = vi.fn();
+    render(
+      <DeckDetail
+        deck={dummyDeck}
+        words={dummyWords}
+        onBack={vi.fn()}
+        onAddWord={vi.fn()}
+        onDeleteWord={vi.fn()}
+        onEditDeck={handleEditDeck}
+      />
+    );
+
+    const editDeckBtn = screen.getByLabelText('Chỉnh sửa bộ từ');
+    fireEvent.click(editDeckBtn);
+    expect(handleEditDeck).toHaveBeenCalledWith(dummyDeck);
+  });
+
+  it('calls onEditWord when edit word button is clicked in word card', () => {
+    const handleEditWord = vi.fn();
+    render(
+      <DeckDetail
+        deck={dummyDeck}
+        words={dummyWords}
+        onBack={vi.fn()}
+        onAddWord={vi.fn()}
+        onDeleteWord={vi.fn()}
+        onEditWord={handleEditWord}
+      />
+    );
+
+    const editWordBtn = screen.getByLabelText('Chỉnh sửa từ 你好');
+    fireEvent.click(editWordBtn);
+    expect(handleEditWord).toHaveBeenCalledWith(dummyWords[0]);
+  });
+
+  it('calls onEditWord when edit button is clicked inside practice view', () => {
+    const handleEditWord = vi.fn();
+    render(
+      <DeckDetail
+        deck={dummyDeck}
+        words={dummyWords}
+        onBack={vi.fn()}
+        onAddWord={vi.fn()}
+        onDeleteWord={vi.fn()}
+        onEditWord={handleEditWord}
+      />
+    );
+
+    fireEvent.click(screen.getByText('你好'));
+    const editPracticeBtn = screen.getByLabelText('Sửa từ này');
+    fireEvent.click(editPracticeBtn);
+    expect(handleEditWord).toHaveBeenCalledWith(dummyWords[0]);
+  });
+
   it('calls onDeleteWord with word id when delete button is clicked', () => {
     const handleDelete = vi.fn();
     render(

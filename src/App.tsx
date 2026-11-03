@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Zap, X, Play, Edit3, PenTool, AlertTriangle, Loader2 } from 'lucide-react';
-import type { Deck, Word } from './types';
+import { Search, Zap, X, Play, Edit3, PenTool, AlertTriangle, Loader2, Brain } from 'lucide-react';
+import type { Deck, Word, ReviewRating } from './types';
 import {
   db,
   seedInitialDecks,
   createDeck,
+  updateDeck,
   addWordToDeck,
+  updateWord,
+  recordWordReview,
   deleteWord,
   getDeckWithWords,
 } from './db';
 import DeckList from './components/deck/DeckList';
 import DeckDetail from './components/deck/DeckDetail';
 import CreateDeckModal from './components/deck/CreateDeckModal';
+import EditDeckModal from './components/deck/EditDeckModal';
 import AddWordModal from './components/deck/AddWordModal';
+import EditWordModal from './components/deck/EditWordModal';
 import DeckImporter from './components/deck/DeckImporter';
+import ReviewModal, { type DeckWithWords } from './components/review/ReviewModal';
 import WordContainer from './components/practice/WordContainer';
 import StrokeAnimator from './components/practice/StrokeAnimator';
 import GuidedQuiz from './components/practice/GuidedQuiz';
@@ -27,9 +33,15 @@ export default function App() {
 
   // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [deckToEdit, setDeckToEdit] = useState<Deck | null>(null);
   const [isAddWordModalOpen, setIsAddWordModalOpen] = useState(false);
+  const [wordToEdit, setWordToEdit] = useState<Word | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [wordToDelete, setWordToDelete] = useState<Word | null>(null);
+
+  // Review state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewDecksWithWords, setReviewDecksWithWords] = useState<DeckWithWords[]>([]);
 
   // Quick Practice state
   const [quickPracticeInput, setQuickPracticeInput] = useState('');
@@ -39,6 +51,16 @@ export default function App() {
   const loadDecks = async () => {
     const loadedDecks = await db.decks.toArray();
     setDecks(loadedDecks);
+  };
+
+  const loadDecksWithWords = async () => {
+    const allDecks = await db.decks.toArray();
+    const allWords = await db.words.toArray();
+    const mapped: DeckWithWords[] = allDecks.map((d) => ({
+      deck: d,
+      words: allWords.filter((w) => w.deckId === d.id),
+    }));
+    setReviewDecksWithWords(mapped);
   };
 
   useEffect(() => {
@@ -80,6 +102,22 @@ export default function App() {
     setIsCreateModalOpen(false);
   };
 
+  const handleUpdateDeck = async (
+    deckId: number,
+    deckData: { title: string; description: string }
+  ) => {
+    await updateDeck(deckId, deckData);
+    await loadDecks();
+    if (selectedDeck?.id === deckId) {
+      const data = await getDeckWithWords(deckId);
+      if (data) {
+        setSelectedDeck(data.deck);
+        setSelectedDeckWords(data.words);
+      }
+    }
+    setDeckToEdit(null);
+  };
+
   const handleAddWord = async (wordData: {
     hanzi: string;
     pinyin?: string;
@@ -99,6 +137,27 @@ export default function App() {
     }
     await loadDecks();
     setIsAddWordModalOpen(false);
+  };
+
+  const handleUpdateWord = async (
+    wordId: number,
+    wordData: {
+      hanzi: string;
+      pinyin?: string;
+      sinoVietnamese?: string;
+      meaning?: string;
+      notes?: string;
+    }
+  ) => {
+    if (!selectedDeck?.id) return;
+    await updateWord(wordId, wordData);
+    const data = await getDeckWithWords(selectedDeck.id);
+    if (data) {
+      setSelectedDeck(data.deck);
+      setSelectedDeckWords(data.words);
+    }
+    await loadDecks();
+    setWordToEdit(null);
   };
 
   const handlePromptDeleteWord = (wordId: number) => {
@@ -135,6 +194,24 @@ export default function App() {
     });
     await loadDecks();
     setIsImportModalOpen(false);
+  };
+
+  const handleOpenReviewModal = async () => {
+    await loadDecksWithWords();
+    setIsReviewModalOpen(true);
+  };
+
+  const handleRecordReview = async (wordId: number, rating: ReviewRating) => {
+    await recordWordReview(wordId, rating);
+    await loadDecksWithWords();
+    if (selectedDeck?.id) {
+      const data = await getDeckWithWords(selectedDeck.id);
+      if (data) {
+        setSelectedDeck(data.deck);
+        setSelectedDeckWords(data.words);
+      }
+    }
+    await loadDecks();
   };
 
   const handleLaunchQuickPractice = (e?: React.FormEvent) => {
@@ -174,8 +251,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Quick Practice Search Bar */}
-        <form onSubmit={handleLaunchQuickPractice} className="flex items-center gap-2 max-w-md w-full">
+        {/* Quick Practice Search Bar & Review Button */}
+        <form onSubmit={handleLaunchQuickPractice} className="flex items-center gap-2 max-w-lg w-full">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
@@ -195,6 +272,14 @@ export default function App() {
             <Zap className="w-4 h-4" />
             <span>Luyện ngay</span>
           </button>
+          <button
+            type="button"
+            onClick={handleOpenReviewModal}
+            className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-xs transition cursor-pointer flex-shrink-0"
+          >
+            <Brain className="w-4 h-4" />
+            <span>Ôn tập</span>
+          </button>
         </form>
       </header>
 
@@ -212,6 +297,8 @@ export default function App() {
             onBack={handleBackToDecks}
             onAddWord={() => setIsAddWordModalOpen(true)}
             onDeleteWord={handlePromptDeleteWord}
+            onEditDeck={(deck) => setDeckToEdit(deck)}
+            onEditWord={(word) => setWordToEdit(word)}
           />
         ) : (
           <DeckList
@@ -219,6 +306,7 @@ export default function App() {
             onSelectDeck={handleSelectDeck}
             onOpenCreateModal={() => setIsCreateModalOpen(true)}
             onOpenImportModal={() => setIsImportModalOpen(true)}
+            onEditDeck={(deck) => setDeckToEdit(deck)}
           />
         )}
       </main>
@@ -338,6 +426,17 @@ export default function App() {
         onCreateDeck={handleCreateDeck}
       />
 
+      {/* Edit Deck Modal */}
+      {deckToEdit && (
+        <EditDeckModal
+          key={deckToEdit.id}
+          isOpen={Boolean(deckToEdit)}
+          deck={deckToEdit}
+          onClose={() => setDeckToEdit(null)}
+          onUpdateDeck={handleUpdateDeck}
+        />
+      )}
+
       {/* Add Word Modal */}
       <AddWordModal
         isOpen={isAddWordModalOpen}
@@ -345,12 +444,33 @@ export default function App() {
         onAddWord={handleAddWord}
       />
 
+      {/* Edit Word Modal */}
+      {wordToEdit && (
+        <EditWordModal
+          key={wordToEdit.id}
+          isOpen={Boolean(wordToEdit)}
+          word={wordToEdit}
+          onClose={() => setWordToEdit(null)}
+          onUpdateWord={handleUpdateWord}
+        />
+      )}
+
       {/* Deck Importer Modal */}
       <DeckImporter
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImportSuccess={handleImportSuccess}
       />
+
+      {/* Spaced Repetition Review Modal */}
+      {isReviewModalOpen && (
+        <ReviewModal
+          isOpen={isReviewModalOpen}
+          decksWithWords={reviewDecksWithWords}
+          onClose={() => setIsReviewModalOpen(false)}
+          onRecordReview={handleRecordReview}
+        />
+      )}
     </div>
   );
 }
